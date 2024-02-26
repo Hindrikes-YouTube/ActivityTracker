@@ -1,0 +1,23 @@
+﻿<div>
+    <button onclick="@(() => OnClick.InvokeAsync())"> 
+        @if(Template is not null)
+        {
+            @Template
+        }
+        else
+        {
+            @Text
+        }
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public string? Text { get; set; }
+
+    [Parameter]
+    public RenderFragment? Template { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+}

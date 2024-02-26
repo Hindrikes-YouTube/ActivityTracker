@@ -1,0 +1,20 @@
+﻿@page "/";
+
+@inherits ActivityTrackerComponentBase
+
+@inject NavigationManager NavigationManager
+
+<HiButton Text="Register activity" OnClick="Register" />
+<HiButton Text="Track activity" OnClick="Track" />
+
+@code {
+    private void Register()
+    {
+        Navigation.NavigateTo("/register");
+    }
+
+    private void Track()
+    {
+        Navigation.NavigateTo("/register");
+    }
+}

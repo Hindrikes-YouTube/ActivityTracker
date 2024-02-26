@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+            xmlns:root="clr-namespace:ActivityTracker"
+       xmlns:shared="clr-namespace:ActivityTracker.Shared;assembly=ActivityTracker.Shared"
+             x:Class="ActivityTracker.AppShell">
+    <TabBar>
+        <ShellContent ContentTemplate="{DataTemplate root:MainPage}" 
+                      Title="Home" 
+                      Icon="{FontImage Color=Black, FontFamily=Icons,Size=22,Glyph={x:Static shared:Icons.Home}}" />
+        <ShellContent ContentTemplate="{DataTemplate root:MainPage}" 
+                      Title="Activities" 
+                      Icon="{FontImage Color=Black, FontFamily=Icons,Size=22,Glyph={x:Static shared:Icons.List}}" />
+    </TabBar>
+</Shell>
