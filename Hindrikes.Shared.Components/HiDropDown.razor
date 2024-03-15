@@ -1,0 +1,58 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using System.Diagnostics.CodeAnalysis
+@using System.Globalization
+
+@typeparam TValue
+@inherits InputBase<TValue>
+
+<div>
+ <label for="@internalId"><b>@Label</b></label> <br/>
+    <select id="@internalId" @onchange="DropDownValueChanged">
+    @foreach (var item in Items)
+    {
+        if (item is null)
+            continue;
+
+        <option value="@ResolveText(item, IdProperty)">@ResolveText(item, TextProperty)</option>
+    }
+</select>
+</div>
+@code {
+    private readonly string internalId = Guid.NewGuid().ToString();
+
+    [Parameter]
+    public string? Label { get; set; }
+    [Parameter]
+    public List<TValue> Items { get; set; } = new();
+    [Parameter]
+    public string IdProperty { get; set; } = "Id";
+    [Parameter]
+    public string TextProperty { get; set; } = "Name";
+
+    private void DropDownValueChanged(ChangeEventArgs args)
+    {
+        if(args.Value is string id)
+        {
+            Value = Items.SingleOrDefault(x => id == ResolveText(x, IdProperty));
+        }        
+    }
+
+    protected override bool TryParseValueFromString(string? value, [MaybeNullWhen(false)] out TValue result, [NotNullWhen(false)] out string? validationErrorMessage)
+    {
+        if (BindConverter.TryConvertTo(value, CultureInfo.InvariantCulture, out result))
+        {
+            validationErrorMessage = null;
+            return true;
+        }
+
+        validationErrorMessage = "Value cannot be parsed from sting";
+        return false;
+    }
+
+    private string ResolveText(object item, string property)
+    {
+        var itemType = item.GetType();
+
+        return itemType.GetProperty(property)?.GetValue(item)?.ToString() ?? item.ToString() ?? "No value found";
+    }
+}

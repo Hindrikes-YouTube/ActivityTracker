@@ -1,0 +1,49 @@
+﻿@page "/activity/active"
+@using ActivityTracker.Shared.Services
+
+@inject ILocationService LocationService
+@inject IActivityService ActivityService
+
+<span>Duration: @(model.Duration.ToString(@"hh\:mm\:ss"))</span>
+<span>Distance: @(model.Distance.ToString("N2")) km</span>
+
+<HiButton Text="Stop" OnClick="Stop" />
+
+@code {
+    private bool isRunning = true;
+    private ViewModel model { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        _ = Task.Run(Refresh);
+    }
+
+    private async Task Refresh()
+    {
+        while(isRunning)
+        {
+            await Task.Delay(1000);
+
+            model.Distance = ActivityService.GetCurrentDistance();
+            model.Duration = ActivityService.GetCurrentDuration();
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void Stop()
+    {
+        LocationService.StopListener();
+        ActivityService.Stop();
+
+        isRunning = false;
+    }
+
+    private class ViewModel
+    {
+        public double Distance { get; set; }
+        public TimeSpan Duration { get; set; }
+    }
+}

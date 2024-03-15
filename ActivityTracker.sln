@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ActivityTracker.Shared", "A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hindrikes.Shared.Components", "Hindrikes.Shared.Components\Hindrikes.Shared.Components.csproj", "{A8FCF209-3A7D-45BA-BF72-2637F2AC9BCA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActivityTracker.UnitTests", "ActivityTracker.UnitTests\ActivityTracker.UnitTests.csproj", "{DC60FFFB-F28A-4D7B-B923-1E13A7811F1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ActivityTracker.UnitTests", "ActivityTracker.UnitTests\ActivityTracker.UnitTests.csproj", "{DC60FFFB-F28A-4D7B-B923-1E13A7811F1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

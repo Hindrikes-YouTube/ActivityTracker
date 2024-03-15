@@ -8,6 +8,10 @@ public interface IActivityService
     Task Pause();
     Task Resume();
     Task Stop();
-    Task<CurrentActivitySummary> Log(string activityId, double latitude, double longitude, DateTime time);
+    Task<CurrentActivitySummary> Log(double latitude, double longitude, DateTime time);
+    double GetCurrentDistance();
+    TimeSpan GetCurrentDuration();
+
+    Task<List<ActivityType>> GetActivityTypes();
 
 }

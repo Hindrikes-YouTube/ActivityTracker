@@ -1,6 +1,50 @@
 ﻿@page "/track"
-<h3>Track</h3>
+@using ActivityTracker.Shared.Models
+@using ActivityTracker.Shared.Services
+
+@inherits ActivityTrackerComponentBase
+
+@inject ILocationService LocationService
+@inject IActivityService ActivityService
+
+<HiDropDown TValue="ActivityType" Items="model.ActivityTypes" @bind-Value="@model.SelectedActivityType" Label="Type of activity" />
+<HiButton OnClick="Start" Text="Start activity" />
 
 @code {
+    private ViewModel model = new ViewModel();
 
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await LocationService.StartListener();
+        LocationService.CreateSubscription(UpdateMap);
+
+        var activityTypes = await ActivityService.GetActivityTypes();
+
+        model.ActivityTypes.AddRange(activityTypes);
+        model.SelectedActivityType = activityTypes.First();
+    }
+
+    private async Task Start()
+    {
+        if (model.SelectedActivityType is null)
+            return;
+
+        LocationService.DisposeSubscription();
+        await ActivityService.Start(model.SelectedActivityType.Id);
+
+        Navigation.NavigateTo("/activity/active");
+    }
+
+    private void UpdateMap(Models.Location location)
+    {
+
+    }
+
+    private class ViewModel
+    {
+        public List<ActivityType> ActivityTypes { get; set; } = new();
+        public ActivityType? SelectedActivityType { get; set; }
+    }
 }

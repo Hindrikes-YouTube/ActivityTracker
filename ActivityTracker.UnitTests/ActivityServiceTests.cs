@@ -65,7 +65,7 @@ public class ActivityServiceTests : IAsyncLifetime
         });
 
         var service = new ActivityService(fileSystemHelper);
-        var result = await service.Log(id, 60.403016, 15.463499, startTime.AddSeconds(5));
+        var result = await service.Log(60.403016, 15.463499, startTime.AddSeconds(5));
 
         result.Duration.Seconds.Should().Be(5);
         Math.Round(result.Distance, 3).Should().Be(0.067);

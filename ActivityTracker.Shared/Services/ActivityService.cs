@@ -8,6 +8,7 @@ public class ActivityService : ServiceBase, IActivityService
 {
     private double distance;
     private TimeSpan duration;
+    private string? currentActivityId;
 
     public ActivityService(IFileSystemHelper fileSystemHelper) : base(fileSystemHelper)
     {
@@ -28,11 +29,24 @@ public class ActivityService : ServiceBase, IActivityService
         distance = 0;
         duration = TimeSpan.Zero;
 
+        currentActivityId = activity.Id;
+
         return activity.Id;
     }
 
     public Task Pause()
     {
+        if (currentActivityId is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        var collection = Database.GetCollection<Activity>();
+        var activity = collection.Query().Where(x => x.Id == currentActivityId).First();
+        activity.Events.Add(new() { Time = DateTime.Now, TypeOfEvent = ActivityEventType.Pause });
+
+        collection.Update(activity);
+
         return Task.CompletedTask;
     }
 
@@ -43,19 +57,39 @@ public class ActivityService : ServiceBase, IActivityService
 
     public Task Stop()
     {
+        if (currentActivityId is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        var collection = Database.GetCollection<Activity>();
+        var activity = collection.Query().Where(x => x.Id == currentActivityId).First();
+        activity.Events.Add(new() { Time = DateTime.Now, TypeOfEvent = ActivityEventType.Stop });
+        activity.Duration = duration;
+        activity.Distance = distance;
+
+        collection.Update(activity);
+
+        currentActivityId = null;
+
         return Task.CompletedTask;
     }
 
-    public Task<CurrentActivitySummary> Log(string activityId, double latitude, double longitude, DateTime time)
+    public Task<CurrentActivitySummary> Log(double latitude, double longitude, DateTime time)
     {
-        var collection = Database.GetCollection<Activity>();
-        var activity = collection.Query().Where(x => x.Id == activityId).First();
+        if (currentActivityId is null)
+        {
+            return Task.FromResult<CurrentActivitySummary>(new(0, TimeSpan.Zero));
+        }
 
+        var collection = Database.GetCollection<Activity>();
+        var activity = collection.Query().Where(x => x.Id == currentActivityId).First();
+   
         var lastEvent = activity.Events.Last();
 
-        if(lastEvent.TypeOfEvent == ActivityEventType.Pause)
+        if (lastEvent.TypeOfEvent == ActivityEventType.Pause)
         {
-            return Task.FromResult<CurrentActivitySummary>(new (distance, duration));
+            return Task.FromResult<CurrentActivitySummary>(new(distance, duration));
         }
 
         var lastLocation = activity.Locations.LastOrDefault();
@@ -70,13 +104,13 @@ public class ActivityService : ServiceBase, IActivityService
         activity.Locations.Add(currentLocation);
 
         //Note if person is moving when paused the distance will be wrong right now.
-        if(lastLocation is not null)
+        if (lastLocation is not null)
         {
             var newDistance = Microsoft.Maui.Devices.Sensors.Location.CalculateDistance(lastLocation.Latitude, lastLocation.Longitude, currentLocation.Latitude, currentLocation.Longitude, DistanceUnits.Kilometers);
             distance += newDistance;
         }
-       
-        if(activity.Events.Count == 1)
+
+        if (activity.Events.Count == 1)
         {
             duration = time - activity.Events[0].Time;
         }
@@ -87,7 +121,9 @@ public class ActivityService : ServiceBase, IActivityService
 
         lastLocation = currentLocation;
 
-        return Task.FromResult<CurrentActivitySummary>(new (distance, duration));
+        collection.Update(activity);
+
+        return Task.FromResult<CurrentActivitySummary>(new(distance, duration));
     }
 
     private TimeSpan CalculateDuration(Activity activity)
@@ -96,9 +132,9 @@ public class ActivityService : ServiceBase, IActivityService
 
         DateTime last = DateTime.MinValue;
 
-        foreach(var e in activity.Events)
+        foreach (var e in activity.Events)
         {
-            if(e.TypeOfEvent != ActivityEventType.Resume) 
+            if (e.TypeOfEvent != ActivityEventType.Resume)
             {
                 var d = e.Time - last;
                 duration.Add(d);
@@ -108,5 +144,17 @@ public class ActivityService : ServiceBase, IActivityService
         }
 
         return duration;
+    }
+
+    public double GetCurrentDistance() => distance;
+    public TimeSpan GetCurrentDuration() => duration;
+
+    public Task<List<ActivityType>> GetActivityTypes()
+    {
+        return Task.FromResult<List<ActivityType>>([
+            new ActivityType("run", "Run"),
+            new ActivityType("ride", "Ride"),
+            new ActivityType("skiing", "Skiing")
+            ]);
     }
 }
