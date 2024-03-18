@@ -1,0 +1,62 @@
+﻿@using OpenLayers.Blazor
+<OpenStreetMap Zoom="@Zoom" Style="@($"width: 100%; height: {Height}px;")" Center="internalCenter">
+    <Features>
+        @foreach (var marker in Markers)
+        {
+            <Marker Type="MarkerType.MarkerPin" Coordinate="new Coordinate(marker.Longitude, center.Latitude)" />
+        }
+
+        @foreach(var line in Track)
+        {
+            <Line BorderColor="Red" BorderSize="5" Points="line"  />
+        }
+    </Features>
+</OpenStreetMap>
+@code {
+    private Coordinate internalCenter = new Coordinate(0, 0);
+
+
+    private Position center = new Position(0, 0);
+    [Parameter]
+    public Position Center
+    {
+        get
+        {
+            return center;
+        }
+        set
+        {
+            center = value;
+            internalCenter = new Coordinate(center.Longitude, center.Latitude);
+        }
+    }
+
+    [Parameter]
+    public int Height { get; set; } = 500;
+
+    [Parameter]
+    public List<Position> Markers { get; set; } = new();
+
+    [Parameter]
+    public List<List<Position>> Lines { get; set; } = new();
+
+    [Parameter]
+    public double Zoom { get; set; } = 15;
+
+    private List<Coordinate> currentTrackLine = new();
+    public void AddToTrack(Position position)
+    {
+        var coordinate = new Coordinate(position.Longitude, position.Latitude);
+
+        currentTrackLine.Add(coordinate);
+
+        if(currentTrackLine.Count == 2)
+        {
+            Track.Add(currentTrackLine.ToArray());
+            currentTrackLine.RemoveAt(0);
+        }
+
+    }
+    
+    private List<Coordinate[]> Track { get; set; } = [];
+}

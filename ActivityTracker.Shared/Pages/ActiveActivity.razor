@@ -1,21 +1,27 @@
 ﻿@page "/activity/active"
 @using ActivityTracker.Shared.Services
+@using Hindrikes.Shared.Components.Models
 
 @inject ILocationService LocationService
 @inject IActivityService ActivityService
 
+<HiMap @ref="map" Center="model.Center" Lines="@model.Lines" />
 <span>Duration: @(model.Duration.ToString(@"hh\:mm\:ss"))</span>
 <span>Distance: @(model.Distance.ToString("N2")) km</span>
 
 <HiButton Text="Stop" OnClick="Stop" />
 
 @code {
+    private HiMap map;
+
     private bool isRunning = true;
-    private ViewModel model { get; set; } = new();
+    private ViewModel model = new();
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+
+        LocationService.CreateSubscription(UpdateMap);
 
         _ = Task.Run(Refresh);
     }
@@ -36,14 +42,34 @@
     private void Stop()
     {
         LocationService.StopListener();
+        LocationService.DisposeSubscription();
         ActivityService.Stop();
 
         isRunning = false;
+    }
+
+    private DateTime lastUpdate;
+
+    private void UpdateMap(Models.Location location)
+    {
+        if (lastUpdate == DateTime.MinValue ||  DateTime.Now - lastUpdate >= TimeSpan.FromSeconds(5))
+        {
+            var position = new Position(location.Latitude, location.Longitude);
+
+            map.AddToTrack(position);
+            model.Center = position;
+
+            InvokeAsync(StateHasChanged);
+
+            lastUpdate = DateTime.Now;
+        }
     }
 
     private class ViewModel
     {
         public double Distance { get; set; }
         public TimeSpan Duration { get; set; }
+        public List<List<Position>> Lines { get; set; } = [new()];
+        public Position Center { get; set; } = new Position(0, 0);
     }
 }

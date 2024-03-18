@@ -1,12 +1,14 @@
 ﻿@page "/track"
 @using ActivityTracker.Shared.Models
 @using ActivityTracker.Shared.Services
+@using Hindrikes.Shared.Components.Models
 
 @inherits ActivityTrackerComponentBase
 
 @inject ILocationService LocationService
 @inject IActivityService ActivityService
 
+<HiMap Center="model.Center" Markers="@model.Markers" />
 <HiDropDown TValue="ActivityType" Items="model.ActivityTypes" @bind-Value="@model.SelectedActivityType" Label="Type of activity" />
 <HiButton OnClick="Start" Text="Start activity" />
 
@@ -39,12 +41,17 @@
 
     private void UpdateMap(Models.Location location)
     {
-
+        model.Center = new Position(location.Latitude, location.Longitude);
+        model.Markers.Add(model.Center);
+        InvokeAsync(StateHasChanged);
+        LocationService.DisposeSubscription();
     }
 
     private class ViewModel
     {
         public List<ActivityType> ActivityTypes { get; set; } = new();
         public ActivityType? SelectedActivityType { get; set; }
+        public Position Center { get; set; } = new Position(0, 0);
+        public List<Position> Markers { get; set; } = new();
     }
 }

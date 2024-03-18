@@ -75,11 +75,17 @@ public class ActivityService : ServiceBase, IActivityService
         return Task.CompletedTask;
     }
 
+    private DateTime lastLog;
     public Task<CurrentActivitySummary> Log(double latitude, double longitude, DateTime time)
     {
         if (currentActivityId is null)
         {
             return Task.FromResult<CurrentActivitySummary>(new(0, TimeSpan.Zero));
+        }
+
+        if (lastLog != DateTime.MinValue || time - lastLog < TimeSpan.FromSeconds(1))
+        {
+            return Task.FromResult<CurrentActivitySummary>(new(distance, duration));
         }
 
         var collection = Database.GetCollection<Activity>();
